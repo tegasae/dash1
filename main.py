@@ -1,3 +1,4 @@
+
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 import sqlite3
@@ -5,15 +6,58 @@ import datetime
 
 from dash import Dash, html
 import pandas as pd
+from dash.dash_table import DataTable
 
 
-#df = pd.read_csv('https://gist.githubusercontent.com/chriddyp/c78bf172206ce24f77d6363a2d754b59/raw/c353e8ef842413cae56ae3920b8fd78468aa4cb2/usa-agricultural-exports-2011.csv')
+
+
+
 conn = sqlite3.connect('telebot.db')
 date_now=datetime.date.today().isoformat()
-query=(f"select u.user_id,u.name,min(l.time_s),time(l.time_s) from users u, log l on u.user_id =l.user_id where "
-       f"date(l.time_s)='{date_now}' and strftime('%H', l.time_s)>='08' group by u.user_id, u.name")
+query=(f"select u.name, STRFTIME('%H:%M',(select time_s from log l where l.user_id=u.user_id and date(time_s)='{date_now}' "
+       f"and  strftime('%H', l.time_s)>='08')) from users u where status =2 and confirmed =2")
 df = pd.read_sql_query(query, conn)
+df.columns=["Имя", "Время начала"]
+df["Время начала"] = df["Время начала"].fillna("No Data")
 conn.close()
+dt=DataTable(
+        id='dataframe-table',
+        columns=[
+            {"name": i, "id": i} for i in df.columns
+        ],
+    data=df.to_dict('records'),  # Convert DataFrame to list of dictionaries
+    style_table={'overflowX': 'auto','witdh':'50%'},
+    style_cell={'textAlign': 'left'},
+    page_size=15,  # Pagination: Show 5 rows per page
+    sort_action="native",  # Enable sorting by clicking on column headers
+    filter_action="native",  # Enable filtering by entering text in column headers
+    style_header={
+            'backgroundColor': '#f4f4f4',  # Light gray header background
+            'fontWeight': 'bold',
+        },
+    style_data_conditional=[
+{
+            # Highlight rows where "Время time" equals "09:11"
+            'if': {
+                'filter_query': '{Время начала} =""',  # Correct filter_query syntax
+                'column_id': 'Время начала'
+            },
+            'backgroundColor': '#FFFF00',  # Light red background color
+            'color': '#000000',  # Red text color
+        },
+        {
+            # Highlight rows where "Время time" equals "09:11"
+            'if': {
+                'filter_query': '{Время начала} > "09:15"',  # Correct filter_query syntax
+                'column_id': 'Время начала'
+            },
+            'backgroundColor': '#FFCCCC',  # Light red background color
+            'color': '#FF0000',  # Red text color
+        },
+
+    ]
+)
+
 def generate_table(dataframe, max_rows=10):
 
     return html.Table([
@@ -34,7 +78,8 @@ app = Dash()
 
 app.layout = html.Div([
     html.H4(children=f'Первая отметка о начале работ {date_now}'),
-    generate_table(df)
+    #generate_table(df),
+    dt
 
 ])
 
