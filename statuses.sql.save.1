@@ -1,0 +1,29 @@
+CREATE TABLE statues (
+        status_id INTEGER primary key,
+        name_status INTEGER,
+);
+
+INSERT INTO statues (status_id,name_status) VALUES(1,"Получена");
+INSERT INTO statues (status_id,name_status) VALUES(2,"Выполнена");
+INSERT INTO statues (status_id,name_status) VALUES(3,"Выполнена удаленно");
+INSERT INTO statues (status_id,name_status) VALUES(4,"Выполнена bitrix24");
+INSERT INTO statues (status_id,name_status) VALUES(5,"Выполнена планово");
+INSERT INTO statues (status_id,name_status) VALUES(6,"Отложена");
+INSERT INTO statues (status_id,name_status) VALUES(7,"Передана");
+ddd
+
+
+
+
+
+class Status(Enum):
+    RECEIVED = 1
+    EXECUTED = 2
+    EXECUTED_REMOTE = 3
+    EXECUTED_B24 = 4
+    EXECUTED_PLANNED = 5
+    SET_ASIDE = 6
+    TRANSFERRED = 7
+    CANCELLED = 8   
+    UNKNOWN = 100
+        
