@@ -1,6 +1,6 @@
 backup*
-#.idea/
-.idea1/
+.idea/
+
 .venv/
 
 #*.pyc
