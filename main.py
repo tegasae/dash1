@@ -14,8 +14,10 @@ from dash.dash_table import DataTable
 
 conn = sqlite3.connect('telebot.db')
 date_now=datetime.date.today().isoformat()
-query=(f"select u.name, STRFTIME('%H:%M',(select time_s from log l where l.user_id=u.user_id and date(time_s)='{date_now}' "
-       f"and  strftime('%H', l.time_s)>='08')) from users u where status =2 and confirmed =2")
+date_now= datetime.date.today() - datetime.timedelta(days=12)
+query=(f"select u.name, STRFTIME('%H:%M',(select min(time_s) from log l where l.user_id=u.user_id and date(time_s)='{date_now}' "
+       f"and  strftime('%H', l.time_s)>='08')) from users u "
+       f"where status =2 and confirmed =2")
 df = pd.read_sql_query(query, conn)
 df.columns=["Имя", "Время начала"]
 df["Время начала"] = df["Время начала"].fillna("No Data")
