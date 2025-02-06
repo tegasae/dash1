@@ -14,12 +14,18 @@ from dash.dash_table import DataTable
 
 conn = sqlite3.connect('telebot.db')
 date_now=datetime.date.today().isoformat()
-date_now= datetime.date.today() - datetime.timedelta(days=3)
-query=(f"select u.name, STRFTIME('%H:%M',(select min(time_s) from log l where l.user_id=u.user_id and date(time_s)='{date_now}' "
-       f"and  strftime('%H', l.time_s)>='08')) from users u "
-       f"where status =2 and confirmed =2")
+date_now= (datetime.date.today() - datetime.timedelta(days=2)).isoformat()
+query=(
+f"SELECT u.name, STRFTIME('%H:%M',min(l.time_s)), "
+f"CASE when l.client is not NULL then l.client "
+f"when l.client is NULL then l.synonym  "
+f"else NULL "
+f"end as client_name "
+f"from users u left join log l "
+f"on u.user_id =l.user_id and date(l.time_s)='{date_now}' and STRFTIME('%H',l.time_s)>'08' "
+f"where  u.status =2 and u.confirmed =2 group by u.name")
 df = pd.read_sql_query(query, conn)
-df.columns=["Имя", "Время начала"]
+df.columns=["Имя", "Время начала","Клиент"]
 df["Время начала"] = df["Время начала"].fillna("No Data")
 conn.close()
 dt=DataTable(
@@ -37,27 +43,27 @@ dt=DataTable(
             'backgroundColor': '#f4f4f4',  # Light gray header background
             'fontWeight': 'bold',
         },
-    style_data_conditional=[
-{
-            # Highlight rows where "Время time" equals "09:11"
-            'if': {
-                'filter_query': '{Время начала} =""',  # Correct filter_query syntax
-                'column_id': 'Время начала'
-            },
-            'backgroundColor': '#FFFF00',  # Light red background color
-            'color': '#000000',  # Red text color
+style_data_conditional = [
+    {
+        # Highlight rows where "Время начала" is empty
+        'if': {
+            'filter_query': '{Время начала} = ""',  # Check for empty string
+            'column_id': 'Время начала'
         },
-        {
-            # Highlight rows where "Время time" equals "09:11"
-            'if': {
-                'filter_query': '{Время начала} > "09:15"',  # Correct filter_query syntax
-                'column_id': 'Время начала'
-            },
-            'backgroundColor': '#FFCCCC',  # Light red background color
-            'color': '#FF0000',  # Red text color
+        'backgroundColor': '#FFFFFF',  # Yellow background
+        'color': '#000000',  # Black text
+    },
+    {
+        # Highlight rows where "Время начала" is greater than "09:15"
+        'if': {
+            'filter_query': '{Время начала} > "09:15"',  # Compare time as string
+            'column_id': 'Время начала'
         },
+        'backgroundColor': '#FFCCCC',  # Light red background
+        'color': '#FF0000',  # Red text
+    },
+]
 
-    ]
 )
 
 def generate_table(dataframe, max_rows=10):
