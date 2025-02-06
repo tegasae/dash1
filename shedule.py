@@ -7,7 +7,7 @@ async def periodic_task(interval_seconds):
 
 async def main():
     # Start the periodic task
-    asyncio.create_task(periodic_task(5))
+    await asyncio.create_task(periodic_task(5))
 
     # Keep the main function running (or perform other tasks if needed)
     await asyncio.Event().wait()

@@ -14,7 +14,7 @@ from dash.dash_table import DataTable
 
 conn = sqlite3.connect('telebot.db')
 date_now=datetime.date.today().isoformat()
-date_now= (datetime.date.today() - datetime.timedelta(days=2)).isoformat()
+#date_now= (datetime.date.today() - datetime.timedelta(days=2)).isoformat()
 query=(
 f"SELECT u.name, STRFTIME('%H:%M',min(l.time_s)), "
 f"CASE when l.client is not NULL then l.client "
@@ -26,7 +26,7 @@ f"on u.user_id =l.user_id and date(l.time_s)='{date_now}' and STRFTIME('%H',l.ti
 f"where  u.status =2 and u.confirmed =2 group by u.name")
 df = pd.read_sql_query(query, conn)
 df.columns=["Имя", "Время начала","Клиент"]
-df["Время начала"] = df["Время начала"].fillna("No Data")
+df["Время начала"] = df["Время начала"].fillna("")
 conn.close()
 dt=DataTable(
         id='dataframe-table',
@@ -34,7 +34,7 @@ dt=DataTable(
             {"name": i, "id": i} for i in df.columns
         ],
     data=df.to_dict('records'),  # Convert DataFrame to list of dictionaries
-    style_table={'overflowX': 'auto','witdh':'50%'},
+    style_table={'overflowX': 'auto','width':'50%'},
     style_cell={'textAlign': 'left'},
     page_size=15,  # Pagination: Show 5 rows per page
     sort_action="native",  # Enable sorting by clicking on column headers
@@ -45,22 +45,20 @@ dt=DataTable(
         },
 style_data_conditional = [
     {
-        # Highlight rows where "Время начала" is empty
-        'if': {
-            'filter_query': '{Время начала} = ""',  # Check for empty string
-            'column_id': 'Время начала'
-        },
-        'backgroundColor': '#FFFFFF',  # Yellow background
-        'color': '#000000',  # Black text
-    },
-    {
         # Highlight rows where "Время начала" is greater than "09:15"
         'if': {
             'filter_query': '{Время начала} > "09:15"',  # Compare time as string
-            'column_id': 'Время начала'
         },
         'backgroundColor': '#FFCCCC',  # Light red background
-        'color': '#FF0000',  # Red text
+        'color': '#000000',  # Black text
+    },
+    {
+        # Highlight rows where "Время начала" is NULL or empty
+        'if': {
+            'filter_query': '{Время начала}=""'  # Check for empty strings (NULL equivalent)
+        },
+        'backgroundColor': '#FFFFFF',  # Red background
+        'color': '#6F6F6F',  # Red text
     },
 ]
 
@@ -92,4 +90,4 @@ app.layout = html.Div([
 ])
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host="0.0.0.0")
