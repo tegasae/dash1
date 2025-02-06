@@ -47,7 +47,7 @@ style_data_conditional = [
     {
         # Highlight rows where "Время начала" is greater than "09:15"
         'if': {
-            'filter_query': '{Время начала} > "09:15"',  # Compare time as string
+            'filter_query': '{Время начала} > "09:30"',  # Compare time as string
         },
         'backgroundColor': '#FFCCCC',  # Light red background
         'color': '#000000',  # Black text
