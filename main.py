@@ -86,7 +86,8 @@ app.layout = html.Div([
         interval=60000,  # Update every 5 seconds (5000 ms)
         n_intervals=0   # Counter for number of intervals passed
     ),
-    html.H4(children=f'Первая отметка о начале работ {datetime.date.today().isoformat()}' ),
+    #html.H4(children=f'Первая отметка о начале работ {datetime.date.today().isoformat()}' ),
+    html.H4(id="data-date", ),
     # generate_table(df),
     dt
 
@@ -101,6 +102,18 @@ def update_data(n_intervals):
     # Reload the data
     updated_df = load_data()
     return updated_df.to_dict('records')
+
+
+@app.callback(
+    Output('data-date', 'children'),
+    Input('data-update-interval', 'n_intervals')
+)
+def update_date(n_intervals):
+    # Reload the data
+    #date=
+    #return updated_df.to_dict('records')
+    return f'Первая отметка о начале работ {datetime.date.today().isoformat()}'
+
 
 
 if __name__ == '__main__':
