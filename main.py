@@ -26,7 +26,25 @@ def load_data():
     conn.close()
     return df1
 
+
+def load_duty():
+    conn = sqlite3.connect('telebot.db')
+    date_now = datetime.date.today().isoformat()
+    # date_now= (datetime.date.today() - datetime.timedelta(days=2)).isoformat()
+    query = ("SELECT COALESCE(t.dt, t1.dt) AS dt, COALESCE(t.ticket_count, 0) AS tickets_created, COALESCE("
+             "t1.ticket_count, 0) AS tickets_closed, COALESCE(t.ticket_count, 0) - COALESCE(t1.ticket_count, "
+             "0) AS total_tickets FROM (SELECT DATE(t.date_ticket) AS dt, COUNT(t.ticket_id) AS ticket_count FROM "
+             "tickets t WHERE department = 'Суппорт' GROUP BY dt) t  FULL OUTER JOIN (SELECT DATE(t1.date_closed) AS "
+             "dt, COUNT(t1.ticket_id) AS ticket_count FROM tickets t1 WHERE department = 'Суппорт' and status in (2, "
+             "3, 4, 5) GROUP  BY dt) t1  ON  t.dt = t1.dt ORDER BY dt desc")
+    df1 = pd.read_sql_query(query, conn)
+    df1.columns = ["Дата","Пришедшие заявки", "Закрытые заявки", "Долг"]
+    conn.close()
+    return df1
+
+
 df=load_data()
+dd=load_duty()
 
 dt = DataTable(
     id='dataframe-table',
@@ -64,6 +82,32 @@ dt = DataTable(
 
 )
 
+ddt= DataTable(
+    id='dataframe-duty',
+    columns=[
+        {"name": i, "id": i} for i in dd.columns
+    ],
+    data=dd.to_dict('records'),  # Convert DataFrame to list of dictionaries
+    style_table={'overflowX': 'auto', 'width': '50%'},
+    style_cell={'textAlign': 'left'},
+    page_size=50,  # Pagination: Show 5 rows per page
+    sort_action="native",  # Enable sorting by clicking on column headers
+    filter_action="native",  # Enable filtering by entering text in column headers
+    style_header={
+        'backgroundColor': '#f4f4f4',  # Light gray header background
+        'fontWeight': 'bold',
+    },
+    style_data_conditional=[
+        {
+            # Highlight rows where "Время начала" is greater than "09:15"
+            'if': {
+                'filter_query': '{Долг} > 0',  # Compare time as string
+            },
+            'backgroundColor': '#FFCCCC',  # Light red background
+            'color': '#000000',  # Black text
+        }]
+)
+
 
 def generate_table(dataframe, max_rows=10):
     return html.Table([
@@ -89,7 +133,12 @@ app.layout = html.Div([
     #html.H4(children=f'Первая отметка о начале работ {datetime.date.today().isoformat()}' ),
     html.H4(id="data-date", ),
     # generate_table(df),
-    dt
+    dt,
+    html.Br(),
+    html.Hr(),
+    html.Br(),
+    html.H4("Количество заявок"),
+    ddt
 
 ])
 
@@ -104,6 +153,10 @@ def update_data(n_intervals):
     return updated_df.to_dict('records')
 
 
+
+
+
+
 @app.callback(
     Output('data-date', 'children'),
     Input('data-update-interval', 'n_intervals')
@@ -113,6 +166,21 @@ def update_date(n_intervals):
     #date=
     #return updated_df.to_dict('records')
     return f'Первая отметка о начале работ {datetime.date.today().isoformat()}'
+
+
+
+@app.callback(
+    Output('dataframe-duty', 'data'),
+    Input('data-update-interval', 'n_intervals')
+)
+def update_duty(n_intervals):
+    # Reload the data
+    #date=
+    #return updated_df.to_dict('records')
+    updated_dd = load_duty()
+    return updated_dd.to_dict('records')
+
+
 
 
 
