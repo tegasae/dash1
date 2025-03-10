@@ -18,7 +18,7 @@ def load_data():
         f"else NULL "
         f"end as client_name "
         f"from users u left join log l "
-        f"on u.user_id =l.user_id and date(l.time_s)='{date_now}' and STRFTIME('%H',l.time_s)>'08' "
+        f"on u.user_id =l.user_id and date(l.time_s)='{date_now}' and STRFTIME('%H',l.time_s)>'07' "
         f"where  u.status =2 and u.confirmed =2 group by u.name")
     df1 = pd.read_sql_query(query, conn)
     df1.columns = ["Имя", "Время начала", "Клиент"]
